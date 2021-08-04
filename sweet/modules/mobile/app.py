@@ -1,4 +1,4 @@
-from selenium import webdriver
+from appium import webdriver
 from selenium.common.exceptions import ElementClickInterceptedException
 from appium.webdriver.common.touch_action import TouchAction
 from time import sleep
@@ -9,7 +9,7 @@ from sweet.utility import compare, replace, json2dict
 
 from sweet.modules.mobile.window import Windows
 from sweet.modules.web.locator import locating
-from sweet.modules.web.config import *
+from sweet.modules.web.config import element_wait_timeout, page_flash_timeout, keywords
 
 
 class App:
@@ -21,13 +21,7 @@ class App:
         platform = setting.get('platformName', '')
         # snapshot = setting.pop('snapshot', False)
 
-        if platform.lower() == 'ios':
-            from appium import webdriver as appdriver
-            self.driver = appdriver.Remote(self.server_url, self.desired_caps)
-
-        elif platform.lower() == 'android':
-            from appium import webdriver as appdriver
-            self.driver = appdriver.Remote(self.server_url, self.desired_caps)
+        self.driver = webdriver.Remote(self.server_url, self.desired_caps)
 
         # 等待元素超时时间
         self.driver.implicitly_wait(element_wait_timeout)  # seconds
@@ -37,9 +31,11 @@ class App:
         self.w.driver = self.driver
 
     def _close(self):
-        pass
+
+        pass  # nothing to do
 
     def _call(self, step):
+
         # 处理截图数据
         # snap = Snapshot()
         # snap.pre(step)
@@ -59,7 +55,6 @@ class App:
         element = getattr(self, step['keyword'].lower())(step)
         # snap.web_shot(step, element)
 
-
     def title(self, data, output):
         log.debug(f'DATA:{repr(data["text"])}')
         log.debug(f'REAL:{repr(self.driver.title)}')
@@ -71,7 +66,6 @@ class App:
         # 只能获取到元素标题
         for key in output:
             vars.put({key: self.driver.title})
-
 
     def current_url(self, data, output):
         log.debug(f'DATA:{repr(data["text"])}')
@@ -93,7 +87,6 @@ class App:
         if not isinstance(element, dict):
             raise Exception(f'no this element:{element}')
 
-
     def open(self, step):
         url = step['element']['value']
 
@@ -108,7 +101,6 @@ class App:
             co = self.driver.get_cookie(json2dict(cookie).get('name', ''))
             log.debug(f'cookie is add: {co}')
         sleep(0.5)
-
 
     def check(self, step):
         data = step['data']
@@ -163,7 +155,6 @@ class App:
                     v = location.get_attribute(output[key])
                     vars.put({key: v})
 
-
     def notcheck(self, step):
         try:
             self.check(step)
@@ -176,7 +167,7 @@ class App:
         location = self.locat(step['element'])
 
         if step['data'].get('清除文本', '') == '否' or step['data'].get('clear', '').lower() == 'no':
-            pass
+            pass  # 无需清空输入框
         else:
             location.clear()
 
@@ -214,7 +205,6 @@ class App:
 
     def click(self, step):
         elements = step['elements']  # click 支持多个元素连续操作，需要转换为 list
-        # data = step['data']
 
         location = ''
         for element in elements:
@@ -246,10 +236,8 @@ class App:
         action = TouchAction(self.driver)
 
         elements = step['elements']  # click 支持多个元素连续操作，需要转换为 list
-        # data = step['data']
 
         location = ''
-
         for element in elements:
             if ',' in element:
                 position = element.split(',')
@@ -269,7 +257,7 @@ class App:
             if output[key] == 'text':
                 vars.put({key: location.text})
             elif output[key] == 'tag_name':
-                vars.put({key: location.tag_name})     
+                vars.put({key: location.tag_name})
             elif output[key] in ('text…', 'text...'):
                 if location.text.endswith('...'):
                     vars.put({key: location.text[:-3]})
@@ -326,7 +314,7 @@ class App:
         duration = float(step['data'].get('持续时间', 0.3))
         assert isinstance(elements, list) and len(
             elements) > 2, '坐标格式或数量不对，正确格式如：lock_pattern|1|4|7|8|9'
-        location = self.locat(elements[0]) 
+        location = self.locat(elements[0])
         rect = location.rect
         w = rect['width'] / 6
         h = rect['height'] / 6
@@ -356,12 +344,6 @@ class App:
         duration = float(step['data'].get('持续时间', 0.3))
         rocker_name = step['data'].get('摇杆', 'rocker')
         release = step['data'].get('释放', False)
-
-        # if isinstance(element, str):
-        #     if element:
-        #         element = [element]
-        #     else:
-        #         element = []
 
         postions = []
         for element in elements:
@@ -430,7 +412,7 @@ class App:
         assert isinstance(elements, list) and len(
             elements) == 2, '元素格式或数量不对，正确格式如：origin_el|destination_el'
         origin = self.locat(elements[0])
-        destination = self.locat(elements[1])        
+        destination = self.locat(elements[1])
         self.driver.drag_and_drop(origin, destination)
 
     def long_press(self, step):

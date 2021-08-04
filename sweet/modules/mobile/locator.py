@@ -54,17 +54,3 @@ def locating(driver, app, element, action=''):
         pass
 
     return location
-
-
-def locatings(elements):
-    locations = {}
-    for el in elements:
-        locations[el] = locating(el)
-    return locations
-
-
-# def locating_data(keys):
-#     data_location = {}
-#     for key in keys:
-#         data_location[key] = locating(key)
-#     return data_location
